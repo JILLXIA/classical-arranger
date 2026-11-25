@@ -1,0 +1,26 @@
+# Local Python environments and caches
+/venv/
+/.venv*/
+__pycache__/
+*.py[cod]
+.DS_Store
+
+# Recordings, generated arrangements, uploads, and worker databases
+/results/
+/arranger-data/
+*.wav
+*.flac
+*.mp3
+*.ovvw
+*.mid
+!/examples/*.mid
+*.sqlite*
+
+# Local configuration and deployment state
+.env
+.env.*
+!.env.example
+*.log
+*.part
+/scripts/runpod/.runpod-deploy.lock
+/scripts/runpod/runpod-id.txt
