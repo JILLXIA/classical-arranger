@@ -3,7 +3,6 @@ import argparse
 from bisect import bisect_right
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import datetime
 import json
 import os
 import re
@@ -13,7 +12,7 @@ import subprocess
 import sys
 import tempfile
 
-from arranger import Event, label, note, read_midi, write_midi
+from arranger import Event, default_midi_path, label, note, read_midi, write_midi
 
 PPQ = 960
 DEFAULT_HOME = "/workspace/YuE/skills/yue2-music/instrumental"
@@ -354,7 +353,7 @@ def main():
         choices=list(ENSEMBLES),
         help="Symbolic accompaniment rhythm (default: infer from prompt)",
     )
-    cli.add_argument("--out", type=Path, help="Destination MIDI (default: beside input, with timestamp)")
+    cli.add_argument("--out", type=Path, help="Destination MIDI (default: project result/ directory)")
     cli.add_argument(
         "--ssh", default=os.getenv("YUE2_SSH"), help="Upload WAV and download MIDI via SSH on a Mac"
     )
@@ -378,7 +377,7 @@ def main():
         cli.error("Input must be an existing WAV file.")
     groove = args.groove or choose_groove(args.prompt)
     parts = parse_parts(args.parts if args.parts is not None else ENSEMBLES[groove])
-    dest = args.out or src.with_name(f"{src.stem}-arranged-{datetime.now():%Y%m%d-%H%M%S}.mid")
+    dest = args.out or default_midi_path(src)
     if dest.suffix.lower() not in {".mid", ".midi"} or dest.exists():
         cli.error("Choose a new .mid output path.")
     if not 0 <= args.seed < 2**63:

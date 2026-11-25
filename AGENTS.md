@@ -1,5 +1,7 @@
 # Repository Guidelines
 
+For requests to run the arranger, generate editable MIDI from a WAV, or produce a preview or reference recording, use the repository's [Classical Arranger skill](skills/classical-arranger/SKILL.md).
+
 ## Project Structure
 
 Python modules live at the repository root. `arranger.py` reads MIDI, preserves the selected melody, and generates accompaniment. `preview.py` renders that arrangement as WAV with FluidSynth. `midi_events.py` exports melody events for a separate YuE2 reference performance.

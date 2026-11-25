@@ -7,6 +7,8 @@ from pathlib import Path
 
 import httpx
 
+from arranger import RESULT_DIR
+
 
 def checked(response):
     if response.is_error:
@@ -31,7 +33,8 @@ def main():
     parser.add_argument("--key", default="")
     parser.add_argument("--keep-harmony", action="store_true")
     parser.add_argument("--take", default="1", help="Change to launch a new attempt")
-    parser.add_argument("--out", type=Path, default=Path("results"))
+    parser.add_argument("--out", type=Path, default=RESULT_DIR,
+                        help="Download directory (default: project result/ directory)")
     args = parser.parse_args()
     with httpx.Client(base_url=args.url, timeout=120, trust_env=False) as client:
         if args.plan:

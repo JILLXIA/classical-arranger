@@ -6,6 +6,7 @@ __pycache__/
 .DS_Store
 
 # Recordings, generated arrangements, uploads, and worker databases
+/result/
 /results/
 /arranger-data/
 *.wav

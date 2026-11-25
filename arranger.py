@@ -8,7 +8,15 @@ import struct
 import sys
 from collections import Counter
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
+
+
+RESULT_DIR = Path(__file__).resolve().parent / "result"
+
+
+def default_midi_path(source: Path) -> Path:
+    return RESULT_DIR / f"{source.stem}-arranged-{datetime.now():%Y%m%d-%H%M%S-%f}.mid"
 
 
 @dataclass(frozen=True)
@@ -357,7 +365,7 @@ def main() -> int:
     arrange.add_argument("--channel", required=True, type=int, help="One-based MIDI channel, 1-16")
     arrange.add_argument("--chords", required=True, help="Comma-separated, one per bar, e.g. Am,E7,Dm,Am")
     arrange.add_argument("--style", choices=["funk", "swing", "neo_soul"], required=True)
-    arrange.add_argument("--out", required=True, type=Path)
+    arrange.add_argument("--out", type=Path, help="Destination MIDI (default: project result/ directory)")
     args = parser.parse_args()
     try:
         if args.operation == "inspect":
@@ -368,6 +376,9 @@ def main() -> int:
         else:
             result = arrange_bytes(args.input.read_bytes(), args.track, args.channel,
                                    args.chords.split(","), args.style)
+            if args.out is None:
+                args.out = default_midi_path(args.input)
+                args.out.parent.mkdir(parents=True, exist_ok=True)
         # Exclusive creation protects existing arrangements and the original file.
         with args.out.open("xb") as output:
             output.write(result)

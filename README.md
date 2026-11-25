@@ -12,7 +12,7 @@ python3 /workspace/wav2midi/wav2midi.py "/workspace/song.wav" \
   --parts "lead=guitar,bass=bass,drums,chords=rhodes"
 ```
 
-The command writes a timestamped `.mid` next to the input. Use `--out /workspace/song-rock.mid` to choose a new destination. Open the MIDI file in Logic Pro and import the tempo map when prompted. Each part has its own track, MIDI channel, and General MIDI program or drum assignment. You can replace Logic's software instrument on each track.
+The command writes a timestamped `.mid` in the project's `result/` directory and prints its full path. Pass `--out` to choose a specific file. Open the MIDI file in Logic Pro and import the tempo map when prompted. Each part has its own track, MIDI channel, and General MIDI program or drum assignment. You can replace Logic's software instrument on each track.
 
 ### Choose your instruments
 
@@ -47,7 +47,7 @@ python3 wav2midi.py "/path/to/song.wav" \
   --parts "lead=violin,bass=cello,arp=harp"
 ```
 
-SSH mode uploads the local WAV, runs inference on the worker, and downloads the MIDI beside the original WAV. You can also pass `--ssh` and `--port` per run. In the GPU terminal itself, leave the SSH options and variables unset.
+SSH mode uploads the local WAV, runs inference on the worker, and downloads the MIDI into the Mac project's `result/` directory. You can also pass `--ssh` and `--port` per run. In the GPU terminal itself, leave the SSH options and variables unset.
 
 ## Prepare a GPU worker
 
@@ -95,10 +95,10 @@ The standalone MIDI CLI uses the Python standard library and preserves the selec
 ```sh
 python3 arranger.py inspect examples/demo.mid
 python3 arranger.py arrange examples/demo.mid --track 1 --channel 1 \
-  --chords Am9,E7,Dm9,Am9 --style neo_soul --out my-arrangement.mid
+  --chords Am9,E7,Dm9,Am9 --style neo_soul
 ```
 
-Use a separate melody track for a polyphonic piano score. For a YuE2-native score, export monophonic melody events with `midi_events.py` and compile them with the upstream score compiler. Use fixed tempo, a supported meter, and note lengths on the supported grid. The exporter supports explicit tempo and pickup overrides.
+The arranged MIDI is saved in the project’s `result/` directory by default. Use a separate melody track for a polyphonic piano score. For a YuE2-native score, export monophonic melody events with `midi_events.py` and compile them with the upstream score compiler. Use fixed tempo, a supported meter, and note lengths on the supported grid. The exporter supports explicit tempo and pickup overrides.
 
 ```sh
 python3 midi_events.py examples/demo.mid --track 1 --channel 1 --key Am \
@@ -129,7 +129,7 @@ python3 -m venv .venv-app
   --track 1 --channel 1 --chords Am9,E7,Dm9,Am9
 ```
 
-The client polls the job and writes artifacts to `results/<job_id>/`. Request `midi` for the preset arrangement, `preview` for a WAV of those same notes, and `reference` for a separate YuE2 performance. A reference-only plan is included in `examples/reference-plan.json`. To run the API on a pod, bind it to loopback and forward its port through SSH.
+The client polls the job and writes artifacts to `result/<job_id>/` in the client project. Request `midi` for the preset arrangement, `preview` for a WAV of those same notes, and `reference` for a separate YuE2 performance. A reference-only plan is included in `examples/reference-plan.json`. To run the API on a pod, bind it to loopback and forward its port through SSH.
 
 - **Reference worker.** Set `YUE2_INSTRUMENTAL` on the worker. WAV input also needs SheetSage2. To transcribe a finished job's reference mix into melody-and-chord MIDI, submit `POST /reference-midi/{job_id}`, poll the same route with GET, and download from `GET /reference-midi/{job_id}/download` when done.
 - **WAV previews.** Install FluidSynth 2.x and set `SOUNDFONT` to a General MIDI `.sf2` file on the worker. Set `FLUIDSYNTH_LIBRARY` if library discovery fails.
