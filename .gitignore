@@ -16,11 +16,9 @@ __pycache__/
 !/examples/*.mid
 *.sqlite*
 
-# Local configuration and deployment state
+# Local configuration and logs
 .env
 .env.*
 !.env.example
 *.log
 *.part
-/scripts/runpod/.runpod-deploy.lock
-/scripts/runpod/runpod-id.txt

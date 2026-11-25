@@ -28,8 +28,6 @@ LIMIT = 32 * 1024 * 1024
 ARTIFACTS = {"midi": "arrangement.mid", "preview": "preview.wav", "reference": "reference.flac"}
 MIME = {"midi": "audio/midi", "preview": "audio/wav", "reference": "audio/flac"}
 app = FastAPI(title="Classical Arranger", version="1.0", docs_url=None, redoc_url=None)
-PROJECT = Path(__file__).resolve().parent
-RECORDING = Path("results/yue2-turkish-march")
 REFERENCE_MIDI_NAME = "reference-transcription.mid"
 
 
@@ -237,13 +235,10 @@ def artifact(job_id: str, kind: str):
 
 
 def reference_audio(source_id):
-    if source_id == "turkish-march":
-        source = PROJECT / RECORDING / "turkish-march-yue2.flac"
-    else:
-        row = find_job(source_id)
-        if "reference" not in json.loads(row["available"]):
-            raise HTTPException(409, "This take needs a finished YuE2 reference before exporting MIDI.")
-        source = ROOT / source_id / ARTIFACTS["reference"]
+    row = find_job(source_id)
+    if "reference" not in json.loads(row["available"]):
+        raise HTTPException(409, "This take needs a finished YuE2 reference before exporting MIDI.")
+    source = ROOT / source_id / ARTIFACTS["reference"]
     if not source.is_file():
         raise HTTPException(404, "Reference recording unavailable.")
     return source

@@ -172,14 +172,14 @@ class ArrangementTests(unittest.TestCase):
             self.assertEqual(latest["reference_export"]["state"], "done")
             self.assertEqual(api.get(latest["artifacts"]["reference_midi"]).content, midi)
 
-    def test_library_export_survives_worker_interruption(self):
-        with tempfile.TemporaryDirectory() as tmp, patch.object(service, "ROOT", Path(tmp)), \
-                patch.object(service, "PROJECT", Path(tmp)), TestClient(service.app) as api:
-            name = "turkish-march-yue2.flac"
-            sample = Path(tmp) / service.RECORDING / name
-            sample.parent.mkdir(parents=True)
-            sample.write_bytes(b"fLaC-demo")
-            url = "/reference-midi/turkish-march"
+    def test_job_export_survives_worker_interruption(self):
+        with tempfile.TemporaryDirectory() as tmp, patch.object(service, "ROOT", Path(tmp)), TestClient(service.app) as api:
+            plan = {"midi_style": None, "outputs": ["reference"], "reference_style": "Waltz"}
+            job = api.post("/jobs", files={"file": ("theme.abc", b"test ABC")},
+                           data={"plan_json": json.dumps(plan)}).json()["job_id"]
+            with patch.object(service, "make_reference", side_effect=lambda folder, cfg: (folder / "reference.flac").write_bytes(b"fLaC-test")):
+                service.worker(once=True)
+            url = f"/reference-midi/{job}"
             self.assertIsNone(api.get(url).json()["state"])
             api.post(url)
             with service.database() as db:
