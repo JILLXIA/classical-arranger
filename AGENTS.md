@@ -1,6 +1,6 @@
 # Repository Guidelines
 
-For requests to run the arranger, generate editable MIDI from a WAV, or produce a preview or reference recording, use the repository's [Classical Arranger skill](skills/classical-arranger/SKILL.md).
+For arrangement requests, including revisions to an approved take, tempo or instrument edits, editable MIDI exports, previews, and YuE2 reference recordings, use the repository's [Classical Arranger skill](skills/classical-arranger/SKILL.md).
 
 ## Project Structure
 

@@ -15,8 +15,20 @@ from pathlib import Path
 RESULT_DIR = Path(__file__).resolve().parent / "result"
 
 
-def default_midi_path(source: Path) -> Path:
-    return RESULT_DIR / f"{source.stem}-arranged-{datetime.now():%Y%m%d-%H%M%S-%f}.mid"
+def song_result_dir(source: Path) -> Path:
+    path = source.resolve()
+    if path.is_relative_to(RESULT_DIR):
+        parts = path.relative_to(RESULT_DIR).parts
+        if len(parts) >= 3:
+            return RESULT_DIR / parts[0]
+    song = source.stem if source.stem.strip(".") else "untitled"
+    return RESULT_DIR / song
+
+
+def default_midi_path(source: Path, style: str = "arranged") -> Path:
+    folder = song_result_dir(source)
+    version = f"{datetime.now():%Y%m%d-%H%M%S-%f}-{style}"
+    return folder / version / f"{folder.name}-{style}.mid"
 
 
 @dataclass(frozen=True)
@@ -365,7 +377,7 @@ def main() -> int:
     arrange.add_argument("--channel", required=True, type=int, help="One-based MIDI channel, 1-16")
     arrange.add_argument("--chords", required=True, help="Comma-separated, one per bar, e.g. Am,E7,Dm,Am")
     arrange.add_argument("--style", choices=["funk", "swing", "neo_soul"], required=True)
-    arrange.add_argument("--out", type=Path, help="Destination MIDI (default: project result/ directory)")
+    arrange.add_argument("--out", type=Path, help="Destination MIDI (default: result/<song>/<version>/)")
     args = parser.parse_args()
     try:
         if args.operation == "inspect":
@@ -377,7 +389,7 @@ def main() -> int:
             result = arrange_bytes(args.input.read_bytes(), args.track, args.channel,
                                    args.chords.split(","), args.style)
             if args.out is None:
-                args.out = default_midi_path(args.input)
+                args.out = default_midi_path(args.input, args.style)
                 args.out.parent.mkdir(parents=True, exist_ok=True)
         # Exclusive creation protects existing arrangements and the original file.
         with args.out.open("xb") as output:

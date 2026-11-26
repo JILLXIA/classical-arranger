@@ -353,7 +353,7 @@ def main():
         choices=list(ENSEMBLES),
         help="Symbolic accompaniment rhythm (default: infer from prompt)",
     )
-    cli.add_argument("--out", type=Path, help="Destination MIDI (default: project result/ directory)")
+    cli.add_argument("--out", type=Path, help="Destination MIDI (default: result/<song>/<version>/)")
     cli.add_argument(
         "--ssh", default=os.getenv("YUE2_SSH"), help="Upload WAV and download MIDI via SSH on a Mac"
     )
@@ -377,7 +377,7 @@ def main():
         cli.error("Input must be an existing WAV file.")
     groove = args.groove or choose_groove(args.prompt)
     parts = parse_parts(args.parts if args.parts is not None else ENSEMBLES[groove])
-    dest = args.out or default_midi_path(src)
+    dest = args.out or default_midi_path(src, groove)
     if dest.suffix.lower() not in {".mid", ".midi"} or dest.exists():
         cli.error("Choose a new .mid output path.")
     if not 0 <= args.seed < 2**63:

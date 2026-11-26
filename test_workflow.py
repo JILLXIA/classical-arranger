@@ -1,6 +1,7 @@
 import json
 import os
 import subprocess
+import sys
 import tempfile
 import unittest
 import wave
@@ -18,6 +19,42 @@ EXAMPLES = Path(__file__).resolve().parent / "examples"
 
 
 class ArrangementTests(unittest.TestCase):
+    def test_skill_tempo_edit_preserves_notes_and_maps_the_audio_tail(self):
+        script = EXAMPLES.parent / "skills/classical-arranger/scripts/midi_timing.py"
+        source = EXAMPLES / "demo-swing.mid"
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            edited = folder / "faster.mid"
+            args = [sys.executable, str(script)]
+            subprocess.run([*args, "curve", source, edited, "--from", "1", "--to", "2=135",
+                            "--to", "3=150"], check=True, capture_output=True)
+            _, old_tracks = read_midi(source.read_bytes())
+            _, new_tracks = read_midi(edited.read_bytes())
+            self.assertEqual(new_tracks[1:], old_tracks[1:])
+            self.assertEqual([e for e in new_tracks[0] if e.kind != 0x151],
+                             [e for e in old_tracks[0] if e.kind != 0x151])
+
+            def report(path):
+                return json.loads(subprocess.check_output([*args, "check", path, "--at", ".8",
+                                                           "--at", "2", "--at", "3"]))
+
+            old, new = report(source), report(edited)
+            self.assertEqual(old["cues"][0], new["cues"][0])
+            self.assertAlmostEqual(new["cues"][1]["bpm"], 135, delta=.05)
+            self.assertAlmostEqual(new["cues"][2]["bpm"], 150, delta=.01)
+            rate = 8000
+            wav = folder / "original.wav"
+            frames = round(rate * old["duration_seconds"]) + rate
+            with wave.open(str(wav), "wb") as audio:
+                audio.setparams((1, 2, rate, 0, "NONE", "not compressed"))
+                audio.writeframes(bytes(2 * frames))
+            mapping = folder / "frames.txt"
+            subprocess.run([*args, "frame-map", source, edited, wav, mapping], check=True, capture_output=True)
+            pairs = [tuple(map(int, line.split())) for line in mapping.read_text().splitlines()]
+            self.assertEqual(pairs[0], (0, 0))
+            self.assertEqual(pairs[-1], (frames, round(rate * new["duration_seconds"]) + rate))
+            self.assertTrue(all(a < c and b < d for (a, b), (c, d) in zip(pairs, pairs[1:])))
+
     def test_custom_midi_parts_follow_transcribed_meter_and_patches(self):
         parts = wav2midi.parse_parts("lead=violin,bass=43,arp=Orchestral Harp,drums")
         with tempfile.TemporaryDirectory() as tmp:

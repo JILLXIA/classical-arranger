@@ -7,7 +7,7 @@ from pathlib import Path
 
 import httpx
 
-from arranger import RESULT_DIR
+from arranger import song_result_dir
 
 
 def checked(response):
@@ -33,8 +33,8 @@ def main():
     parser.add_argument("--key", default="")
     parser.add_argument("--keep-harmony", action="store_true")
     parser.add_argument("--take", default="1", help="Change to launch a new attempt")
-    parser.add_argument("--out", type=Path, default=RESULT_DIR,
-                        help="Download directory (default: project result/ directory)")
+    parser.add_argument("--out", type=Path,
+                        help="Parent of the job directory (default: result/<song>/)")
     args = parser.parse_args()
     with httpx.Client(base_url=args.url, timeout=120, trust_env=False) as client:
         if args.plan:
@@ -58,7 +58,7 @@ def main():
             if state not in {"queued", "running"}:
                 break
             time.sleep(1)
-        output = args.out / receipt["job_id"]
+        output = (args.out or song_result_dir(args.input)) / receipt["job_id"]
         output.mkdir(parents=True, exist_ok=True)
         for kind, route in status["artifacts"].items():
             destination = output / NAMES[kind]
